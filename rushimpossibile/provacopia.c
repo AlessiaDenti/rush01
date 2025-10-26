@@ -150,10 +150,10 @@ int checkaltrev(int col, int matrice[4][4])		//controlla altezza delle colonne
 }
 
 
-void riempicolonna(int col, int matrice[4][4]) // riempe la colonna
+void riempicolonna(int p, int col, int matrice[4][4]) // riempe la colonna
 {
 	int i = 0;
-	int n = 1;
+	int n = 1+p;
 	while (i < 4)				
 		{
 			if (matrice[i][col] == 0)		//cella vuota
@@ -174,15 +174,54 @@ void riempicolonna(int col, int matrice[4][4]) // riempe la colonna
 }
 
 
-
-void back(int *cerca, int matrice[4][4])	// riempi celle backtracking
+int controllocerca(int matrice[4][4], int cerca[16])		// separa controllo righe e colonne
 {
-	int j=0;
-	int ktop;
-	int kbot;
-	int o;
-	//int p = 1;
-	int copia[4][4]={{0,0,0,0} ,{0,0,0,0}, {0,0,0,0},{0,0,0,0}};
+	int i = 0;
+	
+	while (i < 4)
+	{
+		if (checkalt(i, matrice) != cerca[i])		//controlla alt da alto 
+			return 0;
+		i++;
+	}
+	
+	i = 0;
+	while (i < 4)
+	{
+		if (checkaltrev(i, matrice) != cerca[i + 4])		//controlla basso a alto 
+			return 0;
+		i++;
+	}
+	
+	/*i = 0;
+	while (i < 4)
+	{
+		if (checkrigasx(i, matrice) != cerca[i + 8])		//controlla sx a dx 
+			return 0;
+		i++;
+	}
+	
+	i = 0;
+	while (i < 4)
+	{
+		if (checkrigadx(i, matrice) != cerca[i + 12])		//controlla dx a sx 
+			return 0;
+		i++;
+	}*/
+	
+	return 1;		//tutto a posto
+}
+
+int solve(int *cerca, int matrice[4][4], int i, int j)	// riempi celle backtracking
+{
+	if (i == 4) 
+		return 1;  // fine: tutti i valori sono stati provati
+    if (j == 4) 
+    	return solve(cerca, matrice, i+1, 0);
+	if (matrice[i][j] != 0) 
+		return solve(cerca, matrice, i, j+1);
+	
+	int copia[4][4];
 	int v=0;
 	int z;
 	while(v < 4)
@@ -194,26 +233,35 @@ void back(int *cerca, int matrice[4][4])	// riempi celle backtracking
 			}
 			v++;
 	}
-	while(j < 4)						
-	{	
-		//copia = matrice;
-		riempicolonna(j, copia);
-		ktop = checkalt(j, copia);
-		kbot = checkaltrev(j, copia);
-		if (ktop == cerca[j] && kbot == cerca[j+4]) //manca check sulle righe
+	
+	int n=0;
+	int ri;
+	while (++n <= 4)
+	{
+		if (checkrighe(n, matrice[i]) == 0 && checkcol(n, j, matrice) == 0)
 		{
-			o = -1;
-			while(++o < 4)
-				matrice[o][j] = copia[o][j];
-			j++;
-		}
-		else
-		{
-			back(cerca, matrice);
+			matrice[i][j] = n;
+			//riempe colonne e erifica vincoli
+			int col = -1;
+			while (++col < 4)
+			{
+				riempicolonna(0, col, matrice);
+			}
+			
+			if (controllocerca(matrice, cerca) && solve(cerca, matrice, i, j+1))
+                return 1;
+            
+            ri = -1;
+            while (++ri < 4)
+            {
+            	int col = -1;
+            	while (++col < 4)
+            		 matrice[ri][col] = copia[ri][col];
+            }
 		}
 	}
+	return 0;
 }
-
 
 
 int main(void)
@@ -228,11 +276,12 @@ int main(void)
 	//int cerca[16] = {1,2,3,2,3,2,1,2,1,2,2,3,3,3,1,2}; 
 
 	//printf("\n"); 
-	caso4(4, 1, cerca, matricey);
-	g(1, 4, cerca, matricey);
-	put4_4(matricey);
-	back(cerca, matricey, 0);
+	//caso4(4, 1, cerca, matricey);
+	//g(1, 4, cerca, matricey);
+	//put4_4(matricey);
+	//back(cerca, matricey, 0);
 	//printf("%d \n", trovan(2,cerca));
+	solve(cerca, matricey, 0, 0);
 	while (++i <4){
 		j=-1;
 		while(++j <4)
